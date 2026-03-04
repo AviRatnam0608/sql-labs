@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
-import { getDb, resetDb, executeQuery, compareResults, type QueryResult } from "@/lib/sqlEngine";
+import { getDb, resetDb, setupSchema, executeQuery, compareResults, type QueryResult } from "@/lib/sqlEngine";
 import { progressiveQuestions, type SQLQuestion } from "@/lib/questions";
 import VisualTable from "@/components/sql/VisualTable";
 import ResultTable from "@/components/sql/ResultTable";
@@ -27,7 +27,7 @@ export default function ProgressiveMode() {
     resetDb();
     const db = await getDb();
     dbRef.current = db;
-    db.run(q.setupSQL);
+    await setupSchema(db, q.setupSQL);
     // Pre-compute expected result
     const expRes = await executeQuery(db, q.expectedSQL);
     if (expRes.success) {
@@ -52,7 +52,7 @@ export default function ProgressiveMode() {
     resetDb();
     const db = await getDb();
     dbRef.current = db;
-    db.run(question.setupSQL);
+    await setupSchema(db, question.setupSQL);
 
     const result = await executeQuery(db, query);
     setLoading(false);
@@ -143,44 +143,40 @@ export default function ProgressiveMode() {
 
           <SqlEditor onRun={handleRun} disabled={loading} />
 
-          <AnimatePresence mode="wait">
-            {feedback && (
-              <motion.div
-                key="feedback"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className={`flex items-start gap-3 p-4 rounded-lg border ${
-                  feedback.match
-                    ? "bg-success/10 border-success/30 text-success"
-                    : "bg-destructive/10 border-destructive/30 text-destructive"
-                }`}
-              >
-                {feedback.match ? (
-                  <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                ) : (
-                  <XCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+          {feedback && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex items-start gap-3 p-4 rounded-lg border ${
+                feedback.match
+                  ? "bg-success/10 border-success/30 text-success"
+                  : "bg-destructive/10 border-destructive/30 text-destructive"
+              }`}
+            >
+              {feedback.match ? (
+                <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              ) : (
+                <XCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1">
+                <p className="text-sm font-medium">{feedback.message}</p>
+                {feedback.match && (
+                  <button
+                    onClick={handleNext}
+                    className="mt-3 flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-foreground text-background text-xs font-semibold hover:bg-foreground/90 transition-colors"
+                  >
+                    {questionIndex < progressiveQuestions.length - 1 ? (
+                      <>
+                        Next Question <ArrowRight className="w-3 h-3" />
+                      </>
+                    ) : (
+                      "See Results"
+                    )}
+                  </button>
                 )}
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{feedback.message}</p>
-                  {feedback.match && (
-                    <button
-                      onClick={handleNext}
-                      className="mt-3 flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-foreground text-background text-xs font-semibold hover:bg-foreground/90 transition-colors"
-                    >
-                      {questionIndex < progressiveQuestions.length - 1 ? (
-                        <>
-                          Next Question <ArrowRight className="w-3 h-3" />
-                        </>
-                      ) : (
-                        "See Results"
-                      )}
-                    </button>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
 
           {userResult && (
             <ResultTable
