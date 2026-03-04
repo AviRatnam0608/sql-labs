@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { CheckCircle2, XCircle, Zap, Trophy } from "lucide-react";
-import { getDb, resetDb, executeQuery, compareResults, type QueryResult } from "@/lib/sqlEngine";
+import { getDb, resetDb, setupSchema, executeQuery, compareResults, type QueryResult } from "@/lib/sqlEngine";
 import { progressiveQuestions, type SQLQuestion } from "@/lib/questions";
 import VisualTable from "@/components/sql/VisualTable";
 import ResultTable from "@/components/sql/ResultTable";
@@ -55,7 +55,7 @@ export default function TimeAttackMode() {
     resetDb();
     const db = await getDb();
     dbRef.current = db;
-    db.run(q.setupSQL);
+    await setupSchema(db, q.setupSQL);
     const expRes = await executeQuery(db, q.expectedSQL);
     if (expRes.success) setExpectedResult(expRes.result);
   }, []);
@@ -76,7 +76,7 @@ export default function TimeAttackMode() {
     resetDb();
     const db = await getDb();
     dbRef.current = db;
-    db.run(question.setupSQL);
+    await setupSchema(db, question.setupSQL);
 
     const result = await executeQuery(db, query);
     setLoading(false);
@@ -217,24 +217,20 @@ export default function TimeAttackMode() {
 
           <SqlEditor onRun={handleRun} disabled={loading || !running} />
 
-          <AnimatePresence mode="wait">
-            {feedback && (
-              <motion.div
-                key={`fb-${qIndex}-${feedback.match}`}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className={`flex items-center gap-3 p-3 rounded-lg border text-sm font-medium ${
-                  feedback.match
-                    ? "bg-success/10 border-success/30 text-success"
-                    : "bg-destructive/10 border-destructive/30 text-destructive"
-                }`}
-              >
-                {feedback.match ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
-                {feedback.message}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {feedback && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`flex items-center gap-3 p-3 rounded-lg border text-sm font-medium ${
+                feedback.match
+                  ? "bg-success/10 border-success/30 text-success"
+                  : "bg-destructive/10 border-destructive/30 text-destructive"
+              }`}
+            >
+              {feedback.match ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+              {feedback.message}
+            </motion.div>
+          )}
 
           {userResult && <ResultTable result={userResult} isCorrect={feedback?.match} label="Your Result" />}
           {feedback && !feedback.match && expectedResult && (

@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { GraduationCap, Zap, Database } from "lucide-react";
+import { GraduationCap, Zap, Database, BookOpen } from "lucide-react";
 import ProgressiveMode from "@/components/sql/ProgressiveMode";
 import TimeAttackMode from "@/components/sql/TimeAttackMode";
+import VisualGuideMode from "@/components/sql/VisualGuideMode";
 
-type Mode = "select" | "progressive" | "timeattack";
+type Mode = "select" | "progressive" | "timeattack" | "guide";
 
 export default function Index() {
   const [mode, setMode] = useState<Mode>("select");
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border bg-card">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <button onClick={() => setMode("select")} className="flex items-center gap-2.5">
@@ -25,7 +25,7 @@ export default function Index() {
           </button>
 
           {mode !== "select" && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
               <button
                 onClick={() => setMode("progressive")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
@@ -45,6 +45,16 @@ export default function Index() {
                 }`}
               >
                 Time Attack
+              </button>
+              <button
+                onClick={() => setMode("guide")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  mode === "guide"
+                    ? "bg-accent text-accent-foreground"
+                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                }`}
+              >
+                Visual Guide
               </button>
             </div>
           )}
@@ -69,12 +79,12 @@ export default function Index() {
               </motion.div>
               <h1 className="text-3xl font-bold text-foreground">SQL Lab</h1>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Practice SQL with colorful, visual databases. 
+                Practice SQL with colorful, visual databases.
                 Your queries run in a real SQL engine — no faking it.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl w-full">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -86,8 +96,7 @@ export default function Index() {
                 </div>
                 <h3 className="font-bold text-foreground mb-1">Progressive Mode</h3>
                 <p className="text-xs text-muted-foreground">
-                  20 questions covering all SQL topics, from SELECT basics to complex JOINs. 
-                  Difficulty ramps up gradually.
+                  20 questions from SELECT basics to complex JOIN+HAVING queries.
                 </p>
               </motion.button>
 
@@ -102,8 +111,22 @@ export default function Index() {
                 </div>
                 <h3 className="font-bold text-foreground mb-1">Time Attack</h3>
                 <p className="text-xs text-muted-foreground">
-                  5 minutes on the clock. Random questions, increasing difficulty. 
-                  Build streaks for bonus multipliers!
+                  Timed random SQL drills with score multipliers and streaks.
+                </p>
+              </motion.button>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setMode("guide")}
+                className="p-6 rounded-xl border-2 border-accent/20 bg-card hover:border-accent/50 transition-colors text-left group"
+              >
+                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
+                  <BookOpen className="w-5 h-5 text-accent" />
+                </div>
+                <h3 className="font-bold text-foreground mb-1">Visual Guide</h3>
+                <p className="text-xs text-muted-foreground">
+                  Learn SQL command theory with visual examples of joins, grouping, and filtering.
                 </p>
               </motion.button>
             </div>
@@ -112,6 +135,7 @@ export default function Index() {
 
         {mode === "progressive" && <ProgressiveMode />}
         {mode === "timeattack" && <TimeAttackMode />}
+        {mode === "guide" && <VisualGuideMode />}
       </main>
     </div>
   );
